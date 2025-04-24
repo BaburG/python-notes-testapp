@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine # Using alpine for a smaller image
+    container_name: fastapi_notes_db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres} # Use env var from .env or default
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-notesdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Expose port 5432 for potential external access (optional)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  app:
+    container_name: fastapi_notes_app
+    build: .
+    ports:
+      - "8080:8080" # Map host port 8080 to container port 8080
+    env_file:
+      - .env # Load environment variables from .env
+    environment:
+      # Override DATABASE_URL to point to the db service within Docker network
+      # Uses the same credentials as the db service above
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-notesdb}
+    depends_on:
+      db:
+        condition: service_healthy # Wait for db to be healthy
+    restart: unless-stopped
+    # Optional: Mount local code for development (uncomment if needed)
+    # volumes:
+    #   - .:/app
+
+volumes:
+  postgres_data: # Define the named volume for database persistence
+    driver: local 
