@@ -14,7 +14,7 @@ if not DATABASE_URL:
     DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
     DB_NAME = os.getenv("DB_NAME", "notesdb")
     DB_PORT = os.getenv("DB_PORT", 5432)
-    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DATABASE_URL = os.getenv("database-url","")
 else:
     # Parse DATABASE_URL to potentially extract DB_NAME if needed elsewhere
     # Basic parsing, might need improvement for complex URLs
